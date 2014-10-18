@@ -1,0 +1,9 @@
+/*.suo
+/ServerShop/obj/Release/*.cs
+*.txt
+/ServerShop/bin/Debug
+/ServerShop/obj/Debug/*.cs
+*.cache
+*.pdb
+/ServerShop/obj/Debug
+/ServerShop/obj/Release
