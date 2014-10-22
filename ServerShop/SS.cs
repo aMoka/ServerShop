@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
 using System.Timers;
+using System.Text.RegularExpressions;
 
 using Mono.Data.Sqlite;
 using MySql.Data.MySqlClient;
@@ -276,6 +277,21 @@ namespace ServerShop
 						return;
 					}
 					price = (item.price * amount < 1) ? 1 * amount : item.price * amount;
+
+                    if (args.Player.Group.HasPermission("ss.discount.*")) //discount thingy.
+                    {
+                        foreach (string permission in args.Player.Group.permissions)
+                        {
+                            Match Match = Regex.Match(permission, @"ss\.discount\.(\d+)");
+                            if (Match.Success && Match.Value == permission)
+                            {
+                                double percent = (100 - Convert.ToInt32(Match.Groups[1].Value))/100; //?
+                                price = (int)(price * percent);
+                                break;
+                            }
+                        }
+                    }
+
 					if (price > account.Balance)
 					{
 						args.Player.SendErrorMessage("You are short {0} {1} from buying {2} {3}(s)!",
