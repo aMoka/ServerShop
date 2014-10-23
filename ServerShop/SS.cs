@@ -146,7 +146,7 @@ namespace ServerShop
 		public override void Initialize()
 		{
 			#region Commands
-			Commands.ChatCommands.Add(new Command("ss.player", Shop, "sshop", "ss"));
+			Commands.ChatCommands.Add(new Command("ss.player", Shop, "shop", "ss"));
 			Commands.ChatCommands.Add(new Command("ss.admin", AdminShop, "ssa"));
 			#endregion
 		}
@@ -278,24 +278,26 @@ namespace ServerShop
 					}
 					price = (item.price * amount < 1) ? 1 * amount : item.price * amount;
 
-                    if (args.Player.Group.HasPermission("ss.discount.*")) //discount thingy.
+                    if (args.Player.Group.HasPermission("ss.discount")) //Checks if the group has a discount perm
                     {
                         foreach (string permission in args.Player.Group.permissions)
                         {
-                            Match Match = Regex.Match(permission, @"ss\.discount\.(\d+)");
-                            if (Match.Success && Match.Value == permission)
-                            {
-                                double percent = (100 - Convert.ToInt32(Match.Groups[1].Value))/100; //?
-                                price = (int)(price * percent);
-                                break;
-                            }
+                            Match Match = Regex.Match(permission, @"ss\.discount\.(\d+)"); //Looks for actual discount in ss.discount.xx
+							if (Match.Success && Match.Value == permission)
+							{
+								int discount = Convert.ToInt32(Match.Groups[1].Value);
+								double percent = (100 - (double)discount) / 100;
+								price = (int)(price * percent);
+								break;
+							}
                         }
                     }
 
 					if (price > account.Balance)
 					{
+						Money shortage = price - account.Balance;
 						args.Player.SendErrorMessage("You are short {0} {1} from buying {2} {3}(s)!",
-							price - account.Balance, Money.CurrencyName, amount, itemName);
+							shortage, Money.CurrencyName, amount, itemName);
 						return;
 					}
 					account.TransferTo(SEconomyPlugin.Instance.WorldAccount, 
