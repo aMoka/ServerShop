@@ -304,7 +304,7 @@ namespace ServerShop
 						price, 
 						Wolfje.Plugins.SEconomy.Journal.BankAccountTransferOptions.AnnounceToSender,
 						String.Format("buying {0} {1}(s) from the ServerShop.", amount, itemName),
-						"ServerShop Purchase: " + itemName
+						String.Format("ServerShop Purchase: ({0}){1}", amount, itemName) 
 						);
 					Inventory.GetShopItem(item.id).stock -= amount;
 					db.Query("UPDATE Inventory SET Stock = @0 WHERE ID = @1", Inventory.GetShopItem(item.id).stock, item.id);
@@ -368,7 +368,7 @@ namespace ServerShop
 						price,
 						Wolfje.Plugins.SEconomy.Journal.BankAccountTransferOptions.AnnounceToReceiver,
 						String.Format("selling {0} {1}(s) from the ServerShop.", amount, itemName),
-						"ServerShop Sale: " + itemName
+                        String.Format("ServerShop Purchase: ({0}){1}", amount, itemName) 
 						);
 					
 					Inventory.GetShopItem(item.id).stock += amount;
