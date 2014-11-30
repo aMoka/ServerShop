@@ -19,8 +19,8 @@ using Wolfje.Plugins.SEconomy;
 namespace ServerShop
 {
 	[ApiVersion(1, 16)]
-    public class SS : TerrariaPlugin
-    {
+	public class SS : TerrariaPlugin
+	{
 		private IDbConnection db;
 		public List<ShopItem> Inventory = new List<ShopItem>();
 		public List<ShopItem> RestockItems = new List<ShopItem>();
@@ -111,34 +111,35 @@ namespace ServerShop
 		#region ReadDb
 		private void ReadDb()
 		{
-			var reader = db.QueryReader("SELECT * FROM Inventory");
-
-			while (reader.Read())
+			using (var reader = db.QueryReader("SELECT * FROM Inventory"))
 			{
-				int id = reader.Get<int>("ID");
-				int price = reader.Get<int>("Price");
-				int stock = reader.Get<int>("Stock");
-				int maxStock = reader.Get<int>("MaxStock");
-				int restockTime = reader.Get<int>("RestockTime");
-				int restockType = reader.Get<int>("RestockType");
-
-				if (!Inventory.ContainsItem(id))
-					Inventory.Add(new ShopItem(id, price, stock, maxStock, restockTime, restockType));
-
-				if (restockTime > 0)
-					RestockItems.Add(new ShopItem(id, price, stock, maxStock, restockTime, restockType));
+				while (reader.Read())
+				{
+					int id = reader.Get<int>("ID");
+					int price = reader.Get<int>("Price");
+					int stock = reader.Get<int>("Stock");
+					int maxStock = reader.Get<int>("MaxStock");
+					int restockTime = reader.Get<int>("RestockTime");
+					int restockType = reader.Get<int>("RestockType");
+ 
+					if (!Inventory.ContainsItem(id))
+						Inventory.Add(new ShopItem(id, price, stock, maxStock, restockTime, restockType));
+ 
+					if (restockTime > 0)
+						RestockItems.Add(new ShopItem(id, price, stock, maxStock, restockTime, restockType));
+				}
 			}
-
-			reader = db.QueryReader("SELECT * FROM ShopRegions");
-
-			while (reader.Read())
+ 
+			using (var reader = db.QueryReader("SELECT * FROM ShopRegions"))
 			{
-				string region = reader.Get<string>("Region");
-
-				if (!Regions.Contains(region))
-					Regions.Add(region);
+				while (reader.Read())
+				{
+					string region = reader.Get<string>("Region");
+ 
+					if (!Regions.Contains(region))
+						Regions.Add(region);
+				}
 			}
-
 		}
 		#endregion
 
@@ -228,7 +229,11 @@ namespace ServerShop
 				return;
 			}
 
-			matchedItems = TShock.Utils.GetItemByIdOrName(args.Parameters[1].ToLower());
+			if (args.Parameters.Count > 2)
+				matchedItems = TShock.Utils.GetItemByIdOrName(string.Join(" ", args.Parameters.GetRange(1, args.Parameters.Count - 2)));
+			else
+				matchedItems = TShock.Utils.GetItemByIdOrName(args.Parameters[1].ToLower());
+				
 			if (matchedItems.Count == 0)
 			{
 				args.Player.SendErrorMessage("Invalid item!");
@@ -241,14 +246,14 @@ namespace ServerShop
 			}
 			item = Inventory.GetShopItem(matchedItems[0].netID);
 			itemName = TShock.Utils.GetItemById(item.id).name;
-
+ 
 			if (args.Parameters.Count > 2)
 			{
-				if (args.Parameters[args.Parameters.Count - 1].ToLower() == "all")
+				if (args.Parameters.Last().ToLower() == "all")
 				{
 					amount = item.stock;
 				}
-				else if (!Int32.TryParse(args.Parameters[args.Parameters.Count - 1], out amount))
+				else if (!Int32.TryParse(args.Parameters.Last(), out amount))
 				{
 					args.Player.SendErrorMessage("Invalid amount!");
 					return;
@@ -561,12 +566,12 @@ namespace ServerShop
 					string itemName;
 					int number;
 
-					if (!Int32.TryParse(args.Parameters[3], out number))
+					if (!Int32.TryParse(args.Parameters.Last(), out number))
 					{
 						args.Player.SendErrorMessage("Invalid number!");
 						return;
 					}
-					matchedItems = TShock.Utils.GetItemByIdOrName(args.Parameters[1].ToLower());
+					matchedItems = TShock.Utils.GetItemByIdOrName(string.Join(" ", args.Parameters.GetRange(1, args.Parameters.Count - 3)));
 					if (matchedItems.Count == 0)
 					{
 						args.Player.SendErrorMessage("Invalid item!");
