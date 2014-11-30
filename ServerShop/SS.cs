@@ -228,7 +228,7 @@ namespace ServerShop
 				return;
 			}
 
-			matchedItems = TShock.Utils.GetItemByIdOrName(args.Parameters[1].ToLower());
+			matchedItems = TShock.Utils.GetItemByIdOrName(string.Join(" ", args.Parameters.GetRange(1, args.Parameters.Count - 2)));
 			if (matchedItems.Count == 0)
 			{
 				args.Player.SendErrorMessage("Invalid item!");
@@ -244,11 +244,11 @@ namespace ServerShop
 
 			if (args.Parameters.Count > 2)
 			{
-				if (args.Parameters[args.Parameters.Count - 1].ToLower() == "all")
+				if (args.Parameters.Last().ToLower() == "all")
 				{
 					amount = item.stock;
 				}
-				else if (!Int32.TryParse(args.Parameters[args.Parameters.Count - 1], out amount))
+				else if (!Int32.TryParse(args.Parameters.Last(), out amount))
 				{
 					args.Player.SendErrorMessage("Invalid amount!");
 					return;
