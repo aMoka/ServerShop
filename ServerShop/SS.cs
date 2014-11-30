@@ -18,8 +18,8 @@ using Wolfje.Plugins.SEconomy;
 namespace ServerShop
 {
 	[ApiVersion(1, 16)]
-    public class SS : TerrariaPlugin
-    {
+	public class SS : TerrariaPlugin
+	{
 		private IDbConnection db;
 		public List<ShopItem> Inventory = new List<ShopItem>();
 		public List<ShopItem> RestockItems = new List<ShopItem>();
@@ -110,34 +110,35 @@ namespace ServerShop
 		#region ReadDb
 		private void ReadDb()
 		{
-			var reader = db.QueryReader("SELECT * FROM Inventory");
-
-			while (reader.Read())
+			using (var reader = db.QueryReader("SELECT * FROM Inventory"))
 			{
-				int id = reader.Get<int>("ID");
-				int price = reader.Get<int>("Price");
-				int stock = reader.Get<int>("Stock");
-				int maxStock = reader.Get<int>("MaxStock");
-				int restockTime = reader.Get<int>("RestockTime");
-				int restockType = reader.Get<int>("RestockType");
-
-				if (!Inventory.ContainsItem(id))
-					Inventory.Add(new ShopItem(id, price, stock, maxStock, restockTime, restockType));
-
-				if (restockTime > 0)
-					RestockItems.Add(new ShopItem(id, price, stock, maxStock, restockTime, restockType));
+				while (reader.Read())
+				{
+					int id = reader.Get<int>("ID");
+					int price = reader.Get<int>("Price");
+					int stock = reader.Get<int>("Stock");
+					int maxStock = reader.Get<int>("MaxStock");
+					int restockTime = reader.Get<int>("RestockTime");
+					int restockType = reader.Get<int>("RestockType");
+ 
+					if (!Inventory.ContainsItem(id))
+						Inventory.Add(new ShopItem(id, price, stock, maxStock, restockTime, restockType));
+ 
+					if (restockTime > 0)
+						RestockItems.Add(new ShopItem(id, price, stock, maxStock, restockTime, restockType));
+				}
 			}
-
-			reader = db.QueryReader("SELECT * FROM ShopRegions");
-
-			while (reader.Read())
+ 
+			using (var reader = db.QueryReader("SELECT * FROM ShopRegions"))
 			{
-				string region = reader.Get<string>("Region");
-
-				if (!Regions.Contains(region))
-					Regions.Add(region);
+				while (reader.Read())
+				{
+					string region = reader.Get<string>("Region");
+ 
+					if (!Regions.Contains(region))
+						Regions.Add(region);
+				}
 			}
-
 		}
 		#endregion
 
@@ -548,7 +549,7 @@ namespace ServerShop
 						args.Player.SendErrorMessage("Invalid number!");
 						return;
 					}
-					matchedItems = TShock.Utils.GetItemByIdOrName(args.Parameters[1].ToLower());
+					matchedItems = TShock.Utils.GetItemByIdOrName(string.Join(" ", args.Parameters.GetRange(1, args.Parameters.Count - 3)));
 					if (matchedItems.Count == 0)
 					{
 						args.Player.SendErrorMessage("Invalid item!");
