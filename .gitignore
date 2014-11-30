@@ -7,3 +7,6 @@
 *.pdb
 /ServerShop/obj/Debug
 /ServerShop/obj/Release
+ServerShop/bin/Release/HttpServer.dll
+ServerShop/bin/Release/Newtonsoft.Json.dll
+ServerShop/bin/Release/ServerShop.dll
