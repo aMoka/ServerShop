@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
 using System.Timers;
+using System.Text.RegularExpressions;
 
 using Mono.Data.Sqlite;
 using MySql.Data.MySqlClient;
@@ -146,7 +147,7 @@ namespace ServerShop
 		public override void Initialize()
 		{
 			#region Commands
-			Commands.ChatCommands.Add(new Command("ss.player", Shop, "sshop", "ss"));
+			Commands.ChatCommands.Add(new Command("ss.player", Shop, "shop", "ss"));
 			Commands.ChatCommands.Add(new Command("ss.admin", AdminShop, "ssa"));
 			#endregion
 		}
@@ -281,17 +282,34 @@ namespace ServerShop
 						return;
 					}
 					price = (item.price * amount < 1) ? 1 * amount : item.price * amount;
+
+                    if (args.Player.Group.HasPermission("ss.discount")) //Checks if the group has a discount perm
+                    {
+                        foreach (string permission in args.Player.Group.permissions)
+                        {
+                            Match Match = Regex.Match(permission, @"ss\.discount\.(\d+)"); //Looks for actual discount in ss.discount.xx
+							if (Match.Success && Match.Value == permission)
+							{
+								int discount = Convert.ToInt32(Match.Groups[1].Value);
+								double percent = (100 - (double)discount) / 100;
+								price = (int)(price * percent);
+								break;
+							}
+                        }
+                    }
+
 					if (price > account.Balance)
 					{
+						Money shortage = price - account.Balance;
 						args.Player.SendErrorMessage("You are short {0} {1} from buying {2} {3}(s)!",
-							price - account.Balance, Money.CurrencyName, amount, itemName);
+							shortage, Money.CurrencyName, amount, itemName);
 						return;
 					}
 					account.TransferTo(SEconomyPlugin.Instance.WorldAccount, 
 						price, 
 						Wolfje.Plugins.SEconomy.Journal.BankAccountTransferOptions.AnnounceToSender,
 						String.Format("buying {0} {1}(s) from the ServerShop.", amount, itemName),
-						"ServerShop Purchase."
+						String.Format("ServerShop Purchase: ({0}){1}", amount, itemName) 
 						);
 					Inventory.GetShopItem(item.id).stock -= amount;
 					db.Query("UPDATE Inventory SET Stock = @0 WHERE ID = @1", Inventory.GetShopItem(item.id).stock, item.id);
@@ -355,7 +373,7 @@ namespace ServerShop
 						price,
 						Wolfje.Plugins.SEconomy.Journal.BankAccountTransferOptions.AnnounceToReceiver,
 						String.Format("selling {0} {1}(s) from the ServerShop.", amount, itemName),
-						"ServerShop Sale."
+                        String.Format("ServerShop Purchase: ({0}){1}", amount, itemName) 
 						);
 					
 					Inventory.GetShopItem(item.id).stock += amount;
